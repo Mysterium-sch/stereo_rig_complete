@@ -8,7 +8,7 @@ This ROS2 package controls the GUI that displays on the Jetson Orin screens on b
 - **imagenex831l/sonar_health** - Sonar
 - **imu/data** - IMU
 
-For the IMU and sonar, the GUI displays "active" or "not active" depending on whether the topics have a publisher. Similarly, the depth sensor will display "not active" if there is no publisher and the depth value if there is. The image from the image topic displays directly on the screen.
+For the IMU and sonar, the GUI displays "active" or "not active" depending on whether the topics have a publisher. Similarly, the depth sensor will display "not active" if there is no publisher and the depth value if there is. The image from the image topic displays directly on the screen. The gui determines if the orin is connected by pinging the ip address of the other and waiting for a response. If there is no response the orin connection is not active, otherwise it is active.
 
 ## Flir_camera_driver
 
@@ -46,3 +46,23 @@ The package consists of two launch files, one for Jetson 1 and one for Jetson 2.
 The `camera_type` and `serial` parameters are fed into the `flir_camera_driver` package and are required for the camera to properly connect to the rest of the system. The `sonar` parameter indicates whether the system should launch the sonar node. The `cam_topic` parameter specifies which topic the GUI should subscribe to in order to display the image. The `namespace` parameter declares the namespace for the system.
 
 The `ros2_bringup` package also starts the rosbag and records all the necessary topics.
+
+## Instructions
+To launch:
+1. Build all required packages:
+   - **custom_guyi**
+   - **flir_camera_driver**
+   - **imagenex831l_ros2**
+   - **microstrain_inertial**
+   - **ms5837_bar_ros**
+   - **ros2_bringup**
+2. Source `install/setup.bash`
+3. Run the appropriate launch command based on the device
+
+### Jetson_1:
+
+``ros2 launch ros2_bringup ros2_bringup.launch.py namespace:="jetson_1" camera_type:="blackfly_s" serial:="'20096894'" sonar:='true' cam_topic:="jetson_1/debayer/image_raw/rgb"``
+
+### Jetson_2:
+
+``ros2 launch ros2_bringup ros2_bringup.launch.py namespace:="jetson_2" camera_type:="blackfly_s" serial:="'20096894'" sonar:='true' cam_topic:="jetson_2/debayer/image_raw/rgb"``
