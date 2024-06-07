@@ -75,12 +75,12 @@ Due to the sonar, the jetsons have a pre-set ip address of 192.168.0.100 (jetson
 1. Change IP adress of host computer
 2. connect via ethernet to orin
 3. ping orin to confirm connection
-4. ssh -p 22 afrl@**ip adress of orin**
+4. ssh -p 22 afrl@'_ip adress of orin_'
 5. input password for afrl user
 
 ## scp to retrieve bags
 1. Change IP adress of host computer
 2. connect via ethernet to orin
 3. ping orin to confirm connection
-4. scp -P 22 afrl@**ip adress of orin**:**path to bag file on orin** **path to desired directory for bag**
+4. scp -P 22 afrl@'_ip adress of orin_':'_path to bag file on orin_' '_path to desired directory for bag_'
 5. input password for afrl user
