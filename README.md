@@ -61,11 +61,11 @@ To launch:
 
 #### Jetson_1:
 
-``ros2 launch ros2_bringup ros2_bringup.launch.py namespace:="jetson_1" camera_type:="blackfly_s" serial:="'20096894'" sonar:='true' cam_topic:="jetson_1/debayer/image_raw/rgb"``
+``ros2 launch ros2_bringup stereorig_1.launch.py serial:="'21502646'" sonar:='false' namespace:='jetson_1' cam_topic:="debayer/image_raw/rgb" camera_type:="blackfly_s"``
 
 #### Jetson_2:
 
-``ros2 launch ros2_bringup ros2_bringup.launch.py namespace:="jetson_2" camera_type:="blackfly_s" serial:="'20096894'" sonar:='true' cam_topic:="jetson_2/debayer/image_raw/rgb"``
+``ros2 launch ros2_bringup stereorig_2.launch.py serial:="'21387972'" sonar:='true'  namespace:='jetson_2' camera_type:="blackfly_s" cam_topic:="debayer/image_raw/rgb"``
 
 ## Connecting to and Pulling bag from Orin
 
