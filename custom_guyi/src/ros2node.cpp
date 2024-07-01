@@ -1,7 +1,4 @@
 #include "custom_guyi/ros2node.hpp"
-#include <sensor_msgs/image_encodings.hpp>
-#include <boost/filesystem.hpp>
-#include <iostream>
 
 bool fileExists(const std::string& directory, const std::string& extension) {
     try {
@@ -18,70 +15,94 @@ bool fileExists(const std::string& directory, const std::string& extension) {
     return false;
 }
 
-std::string jetsonCheck(std::string device) {
-        if(device == "jetson_1") {
-      int x = system("ping -c1 -s1 192.168.0.100  > /dev/null 2>&1");
-        if (x==0){
-            return "Active";
-        }else{
-            return "Not Active";
-        }
-    } else if (device == "jetson_2"){
-            int x = system("ping -c1 -s1 192.168.0.150  > /dev/null 2>&1");
-        if (x==0){
-            return "Active";
-        }else{
-            return "Not ACtive";
-        }
+std::string jetsonCheck(const std::string& device) {
+    if (device == "jetson_1") {
+        int x = system("ping -c1 -s1 192.168.0.100  > /dev/null 2>&1");
+        return (x == 0) ? "Active" : "Not Active";
+    } else if (device == "jetson_2") {
+        int x = system("ping -c1 -s1 192.168.0.150  > /dev/null 2>&1");
+        return (x == 0) ? "Active" : "Not Active";
+    } else {
+        return "Not Active";
     }
 }
 
 Ros2Node::Ros2Node()
-  : rclcpp::Node("ros2_node"), depth(0.0f)
+  : Node("ros2_node"), depth(0.0f)
 {
     imu = "Not Active";
     orin = "Not Active";
     sonar = "Not Active";
 
+    declare_parameter<std::string>("device", "");
+    get_parameter("device", device);
 
-    this->declare_parameter<std::string>("device", "");
-    this->get_parameter("device", device);
-
-    
-
-    this->declare_parameter<std::string>("cam_topic", "debayer/image_raw/rgb");
-    this->declare_parameter<std::string>("depth_topic", "bar30/depth");
-    this->declare_parameter<std::string>("sonar_topic", "imagenex831l/sonar_health");
-    this->declare_parameter<std::string>("imu_topic", "imu/data");
+    declare_parameter<std::string>("cam_topic", "image/compressed");
+    declare_parameter<std::string>("depth_topic", "bar30/depth");
+    declare_parameter<std::string>("sonar_topic", "imagenex831l/sonar_health");
+    declare_parameter<std::string>("imu_topic", "imu/data");
 
     std::string cam_topic;
     std::string depth_topic;
     std::string sonar_topic;
     std::string imu_topic;
 
-    this->get_parameter("cam_topic", cam_topic);
-    this->get_parameter("depth_topic", depth_topic);
-    this->get_parameter("sonar_topic", sonar_topic);
-    this->get_parameter("imu_topic", imu_topic);
-    
+    get_parameter("cam_topic", cam_topic);
+    get_parameter("depth_topic", depth_topic);
+    get_parameter("sonar_topic", sonar_topic);
+    get_parameter("imu_topic", imu_topic);
 
-
-    cam_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+    cam_sub_ = create_subscription<sensor_msgs::msg::CompressedImage>(
         cam_topic, 10, std::bind(&Ros2Node::cam_callback, this, std::placeholders::_1));
 
-    depth_sub_ = this->create_subscription<std_msgs::msg::Float32>(
+    depth_sub_ = create_subscription<std_msgs::msg::Float32>(
         depth_topic, 10, std::bind(&Ros2Node::depth_callback, this, std::placeholders::_1));
 
-    sonar_sub_ = this->create_subscription<std_msgs::msg::String>(
+    sonar_sub_ = create_subscription<std_msgs::msg::String>(
         sonar_topic, 10, std::bind(&Ros2Node::sonar_callback, this, std::placeholders::_1));
     
-    imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
+    imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
         imu_topic, 10, std::bind(&Ros2Node::imu_callback, this, std::placeholders::_1));
-
-
 }
 
-void Ros2Node::cam_callback(const sensor_msgs::msg::Image::SharedPtr msg) {
+Ros2Node::~Ros2Node()
+{
+    // Reset subscriptions to release resources
+    cam_sub_.reset();
+    depth_sub_.reset();
+    sonar_sub_.reset();
+    imu_sub_.reset();
+}
+
+cv::Mat Ros2Node::getRosMsg() {
+    return cv_ptr;
+}
+
+std::string Ros2Node::getDepth() {
+    return (depth_sub_->get_publisher_count() > 0) ? std::to_string(depth) : "Not Active";
+}
+
+std::string Ros2Node::getSonar() {
+    return (sonar_sub_->get_publisher_count() > 0) ? sonar : "Not Active";
+}
+
+std::string Ros2Node::getIMU() {
+    return (imu_sub_->get_publisher_count() > 0) ? imu : "Not Active";
+}
+
+std::string Ros2Node::getOrin() {
+    orin = jetsonCheck(device);
+    return orin;
+}
+
+std::string Ros2Node::getBag() {
+    std::string directory = ".";
+    std::string file = ".db3";
+    return fileExists(directory, file) ? "Active" : "Not Active";
+}
+
+void Ros2Node::cam_callback(const sensor_msgs::msg::CompressedImage::SharedPtr msg) {
+
     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8)->image;
 }
 
@@ -94,50 +115,5 @@ void Ros2Node::sonar_callback(const std_msgs::msg::String::SharedPtr msg) {
 }
 
 void Ros2Node::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg) {
-    if(msg != nullptr) {
-      imu = "Active";
-    } else {
-      imu = "Not Active";
-    }
-}
-
-cv::Mat Ros2Node::getRosMsg() {
-    return cv_ptr;
-}
-
-
-std::string Ros2Node::getDepth() {
-   	if(depth_sub_->get_publisher_count() > 0) {
-    return std::to_string(depth);
-    }
-    return "Not Active";
-}
-
-std::string Ros2Node::getSonar() {
-   	if(sonar_sub_->get_publisher_count() > 0) {
-    return sonar;
-    }
-    return "Not Active";
-}
-
-std::string Ros2Node::getIMU() {
-	
-	if(imu_sub_->get_publisher_count() > 0) {
-    return imu;
-    }
-    return "Not Active";
-}
-
-std::string Ros2Node::getOrin() {
-    orin = jetsonCheck(device);
-    return orin;
-}
-
-std::string Ros2Node::getBag() {
-  std::string directory = ".";
-  std::string file = ".db3";
-   if(fileExists(directory, file)) {
-    return "Active";
-   }
-   return "Not Active";
+    imu = (msg != nullptr) ? "Active" : "Not Active";
 }

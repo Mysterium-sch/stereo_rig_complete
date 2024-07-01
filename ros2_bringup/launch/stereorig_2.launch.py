@@ -1,5 +1,6 @@
 import os
 import launch
+import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node, PushRosNamespace
@@ -7,19 +8,40 @@ from launch.actions import IncludeLaunchDescription, ExecuteProcess, OpaqueFunct
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
-def ensure_required_arguments(context, *args, **kwargs):
-    required_args = ['namespace', 'camera_type', 'serial', 'sonar', 'cam_topic']
-    for arg in required_args:
-        if not context.launch_configurations.get(arg):
-            raise RuntimeError(f"The '{arg}' argument is required.")
-    return []
-
 def generate_launch_description():
+
+    launch_params_path = os.path.join('/ws/data/config/parms.yaml')
+    with open(launch_params_path, 'r') as f:
+        launch_params = yaml.safe_load(f)
+
+    camera_type = launch_params["jetson_2"]['ros_parameters']['camera_type']
+    device = launch_params["jetson_2"]['ros_parameters']['device']
+    serial = launch_params["jetson_2"]['ros_parameters']['serial']
+    sonar = launch_params["jetson_2"]['ros_parameters']['sonar']
+    cam_topic = launch_params["jetson_2"]['ros_parameters']['cam_topic']
+    debug = launch_params["jetson_2"]['ros_parameters']['debug']
+    compute_brightness = launch_params["jetson_2"]['ros_parameters']['compute_brightness']
+    adjust_timestamp = launch_params["jetson_2"]['ros_parameters']['adjust_timestamp']
+    dump_node_map = launch_params["jetson_2"]['ros_parameters']['dump_node_map']
+    gain_auto = launch_params["jetson_2"]['ros_parameters']['gain_auto']
+    exposure_auto = launch_params["jetson_2"]['ros_parameters']['exposure_auto']
+    user_set_selector = launch_params["jetson_2"]['ros_parameters']['user_set_selector']
+    user_set_load = launch_params["jetson_2"]['ros_parameters']['user_set_load']
+    frame_rate_auto = launch_params["jetson_2"]['ros_parameters']['frame_rate_auto']
+    frame_rate = launch_params["jetson_2"]['ros_parameters']['frame_rate']
+    frame_rate_enable = launch_params["jetson_2"]['ros_parameters']['frame_rate_enable']
+    buffer_queue_size = launch_params["jetson_2"]['ros_parameters']['buffer_queue_size']
+    trigger_mode = launch_params["jetson_2"]['ros_parameters']['trigger_mode']
+    chunk_mode_active = launch_params["jetson_2"]['ros_parameters']['chunk_mode_active']
+    chunk_selector_frame_id = launch_params["jetson_2"]['ros_parameters']['chunk_selector_frame_id']
+    chunk_enable_frame_id = launch_params["jetson_2"]['ros_parameters']['chunk_enable_frame_id']
+    chunk_selector_exposure_time = launch_params["jetson_2"]['ros_parameters']['chunk_selector_exposure_time']
+    chunk_enable_exposure_time = launch_params["jetson_2"]['ros_parameters']['chunk_enable_exposure_time']
+    chunk_selector_gain = launch_params["jetson_2"]['ros_parameters']['chunk_selector_gain']
+    chunk_enable_gain = launch_params["jetson_2"]['ros_parameters']['chunk_enable_gain']
+    chunk_selector_timestamp = launch_params["jetson_2"]['ros_parameters']['chunk_selector_timestamp']
+    chunk_enable_timestamp = launch_params["jetson_2"]['ros_parameters']['chunk_enable_timestamp']
     namespace = LaunchConfiguration('namespace')
-    camera_type = LaunchConfiguration('camera_type')
-    serial = LaunchConfiguration('serial')
-    sonar = LaunchConfiguration('sonar')
-    cam_topic = LaunchConfiguration('cam_topic')
 
     _MICROSTRAIN_LAUNCH_FILE = os.path.join(
         get_package_share_directory('microstrain_inertial_examples'),
@@ -45,7 +67,7 @@ def generate_launch_description():
             PushRosNamespace(namespace),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(cam_dir, 'launch', 'driver_node.launch.py')),
-                launch_arguments={'camera_type': camera_type, 'serial': serial}.items()
+                launch_arguments={'camera_type': camera_type, 'serial': serial,'debug': debug,'compute_brightness': compute_brightness,'adjust_timestamp': adjust_timestamp,'dump_node_map': dump_node_map,'gain_auto': gain_auto,'exposure_auto': exposure_auto,'user_set_selector': user_set_selector,'user_set_load': user_set_load,'frame_rate_auto': frame_rate_auto,'frame_rate': frame_rate,'frame_rate_enable': frame_rate_enable,'buffer_queue_size': buffer_queue_size,'trigger_mode': trigger_mode,'chunk_mode_active': chunk_mode_active,'chunk_selector_frame_id': chunk_selector_frame_id,'chunk_enable_frame_id': chunk_enable_frame_id,'chunk_selector_exposure_time': chunk_selector_exposure_time,'chunk_enable_exposure_time': chunk_enable_exposure_time,'chunk_selector_gain': chunk_selector_gain,'chunk_enable_gain': chunk_enable_gain,'chunk_selector_timestamp': chunk_selector_timestamp,'chunk_enable_timestamp': chunk_enable_timestamp}.items()
             )
         ]
     )
@@ -57,7 +79,6 @@ def generate_launch_description():
         output="screen"
     )
 
-    # TODO: Fix Me
     base_to_range = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -82,7 +103,7 @@ def generate_launch_description():
             PushRosNamespace(namespace),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(sonar_dir, 'launch', 'sonar.launch.py')),
-                launch_arguments={'sonar': sonar, 'device': namespace, 'config': config}.items()
+                launch_arguments={'sonar': sonar, 'device': device, 'config': config}.items()
             )
         ]
     )
@@ -93,7 +114,7 @@ def generate_launch_description():
             PushRosNamespace(namespace),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(screen_dir, 'launch', 'gui.launch.py')),
-                launch_arguments={'cam_topic': cam_topic, 'device': namespace}.items(),
+                launch_arguments={'cam_topic': cam_topic, 'device': device}.items(),
             )
         ]
     )
@@ -104,7 +125,7 @@ def generate_launch_description():
         name='debayer',
         namespace=namespace,
         output='screen',
-        parameters=[{'cam_topic': cam_topic, 'device': namespace}]
+        parameters=[{'cam_topic': cam_topic, 'device': device}]
     )
 
     nodes = [
@@ -130,9 +151,7 @@ def generate_launch_description():
     ]
 
     return LaunchDescription(
-        [
-            OpaqueFunction(function=ensure_required_arguments)
-        ] + nodes + [
+        nodes + [
             ExecuteProcess(
                 cmd=['ros2', 'bag', 'record'] + topics,
                 output='screen'
