@@ -76,28 +76,8 @@ void MainGUI::updateImage()
   int topMargin = 30;
   int bottomMargin = 30;
 
-  int displayWidth = pixxer.width() - 2 * leftMargin;
-  int displayHeight = pixxer.height() - 2 * topMargin;
-
-  // Calculate aspect ratio
-  float aspectRatio = float(im.width()) / float(im.height());
-
-  int adjustedWidth = displayWidth;
-  int adjustedHeight = displayHeight;
-
-  if (aspectRatio > 1) { // Image is wider than it is tall
-    adjustedHeight = int(displayWidth / aspectRatio);
-    if (adjustedHeight > displayHeight) {
-      adjustedHeight = displayHeight;
-      adjustedWidth = int(displayHeight * aspectRatio);
-    }
-  } else { // Image is taller than it is wide or square
-    adjustedWidth = int(displayHeight * aspectRatio);
-    if (adjustedWidth > displayWidth) {
-      adjustedWidth = displayWidth;
-      adjustedHeight = int(displayWidth / aspectRatio);
-    }
-  }
+  int adjustedWidth = pixxer.width() - 2 * (leftMargin + rightMargin);
+  int adjustedHeight = pixxer.height() - 2 * (topMargin + bottomMargin);
 
   QString sonar_msg = QString::fromStdString("Sonar: " + ros2_node->getSonar());
   QString depth_msg = QString::fromStdString("Depth: " + ros2_node->getDepth());
@@ -106,7 +86,7 @@ void MainGUI::updateImage()
   QString bag_msg = QString::fromStdString("bag: " + ros2_node->getBag());
   QString time_msg = QDateTime::currentDateTime().toString("hh:mm:ss");
 
-  painter.drawImage(QRect((pixxer.width() - adjustedWidth) / 2, (pixxer.height() - adjustedHeight) / 2, adjustedWidth, adjustedHeight), im);
+  painter.drawImage(QRect(2 * leftMargin, 2 * topMargin, adjustedWidth, adjustedHeight), im);
   painter.drawText(leftMargin, topMargin - 5, depth_msg);
   painter.drawText(pixxer.width() / 2 - 40, topMargin - 5, time_msg);
   painter.drawText(pixxer.width() / 2 - 40, pixxer.height() - bottomMargin / 2, sonar_msg);

@@ -37,7 +37,7 @@ Ros2Node::Ros2Node()
     declare_parameter<std::string>("device", "");
     get_parameter("device", device);
 
-    declare_parameter<std::string>("cam_topic", "image/compressed");
+    declare_parameter<std::string>("cam_topic", "flir_camera/image_raw/compressed");
     declare_parameter<std::string>("depth_topic", "bar30/depth");
     declare_parameter<std::string>("sonar_topic", "imagenex831l/sonar_health");
     declare_parameter<std::string>("imu_topic", "imu/data");
@@ -103,7 +103,7 @@ std::string Ros2Node::getBag() {
 
 void Ros2Node::cam_callback(const sensor_msgs::msg::CompressedImage::SharedPtr msg) {
 
-    cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8)->image;
+    cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
 }
 
 void Ros2Node::depth_callback(const std_msgs::msg::Float32::SharedPtr msg) {
