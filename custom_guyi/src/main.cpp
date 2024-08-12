@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
     rclcpp::init(argc, argv);
 
     auto ros2_node = std::make_shared<Ros2Node>();
+    auto orin = std::make_shared<OrinDetect>();
     auto gui_app = std::make_shared<MainGUI>(ros2_node);
 
     app.processEvents();
@@ -21,6 +22,7 @@ int main(int argc, char* argv[])
 
     rclcpp::executors::MultiThreadedExecutor exec;
     exec.add_node(ros2_node);
+    exec.add_node(orin);
 
     while (rclcpp::ok())
     {
@@ -30,5 +32,6 @@ int main(int argc, char* argv[])
     signal(SIGINT, siginthandler);
 
     exec.remove_node(ros2_node);
+    exec.remove_node(orin);
     rclcpp::shutdown();
 }
