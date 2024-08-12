@@ -63,6 +63,9 @@ Ros2Node::Ros2Node()
     
     imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
         imu_topic, 10, std::bind(&Ros2Node::imu_callback, this, std::placeholders::_1));
+
+    imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
+        imu_topic, 10, std::bind(&Ros2Node::imu_callback, this, std::placeholders::_1));
 }
 
 Ros2Node::~Ros2Node()
