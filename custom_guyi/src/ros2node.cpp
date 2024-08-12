@@ -52,14 +52,8 @@ Ros2Node::Ros2Node()
     get_parameter("sonar_topic", sonar_topic);
     get_parameter("imu_topic", imu_topic);
 
-<<<<<<< Updated upstream
     cam_sub_ = create_subscription<sensor_msgs::msg::CompressedImage>(
-        cam_topic, 10, std::bind(&Ros2Node::cam_callback, this, std::placeholders::_1));
-=======
-
-    cam_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
         cam_topic, 1, std::bind(&Ros2Node::cam_callback, this, std::placeholders::_1));
->>>>>>> Stashed changes
 
     depth_sub_ = create_subscription<std_msgs::msg::Float32>(
         depth_topic, 10, std::bind(&Ros2Node::depth_callback, this, std::placeholders::_1));
